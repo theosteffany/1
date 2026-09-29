@@ -40,7 +40,7 @@ export function LoginForm() {
           <span className="text-sm font-medium">Password</span>
           <input name="password" type="password" required autoComplete="current-password" className={inputClass} />
         </label>
-        {error && <p className="text-sm text-ember">{error}</p>}
+        {error && <p className="text-sm text-red-700">{error}</p>}
         <Button type="submit" disabled={loading} className="w-full">
           {loading ? "Signing in…" : "Sign in"}
         </Button>

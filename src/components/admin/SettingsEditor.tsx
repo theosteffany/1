@@ -15,6 +15,20 @@ const accentHelp = "Wrap words in *asterisks* to show them in the italic serif a
 
 export const settingsGroups: Group[] = [
   {
+    key: "theme",
+    title: "Colours",
+    description:
+      "Your site palette. Pick with the swatch or type a hex code, then Save. Keep text colours dark enough to read on the backgrounds. Mocha Mousse palette: #F3EFEA · #E6DFD7 · #C0B3A5 · #1E1B19 · #6D4F3E · #829BAB (Slate Gray #728394 also fits).",
+    fields: [
+      { key: "bone", label: "Main background", type: "color", help: "About, Gallery and most of the page." },
+      { key: "mist", label: "Brands section background", type: "color" },
+      { key: "sand", label: "Contact section background", type: "color" },
+      { key: "ink", label: "Text & dark sections", type: "color", help: "All text, the My Work section, footer and buttons. Keep this dark." },
+      { key: "olive", label: "Accent", type: "color", help: "Small labels, icons and button hover. Needs to be readable on the backgrounds." },
+      { key: "ember", label: "Highlight", type: "color", help: "Featured badges and text selection (with dark text on top)." },
+    ],
+  },
+  {
     key: "hero",
     title: "Hero",
     description: "The full-screen video at the top. Use a short (10–20s), silent, compressed MP4 for fast loading.",
@@ -144,7 +158,7 @@ export function SettingsEditor({ group }: { group: Group }) {
             {status.kind === "saving" ? "Saving…" : "Save"}
           </Button>
           {status.kind === "saved" && <span className="text-sm text-olive">Saved — live on the site.</span>}
-          {status.kind === "error" && <span className="text-sm text-ember">{status.msg}</span>}
+          {status.kind === "error" && <span className="text-sm text-red-700">{status.msg}</span>}
         </div>
       </Card>
     </section>

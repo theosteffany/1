@@ -22,7 +22,7 @@ export function Button({
         variant === "primary" && "bg-ink text-bone hover:bg-olive",
         variant === "secondary" && "border border-ink/15 bg-white text-ink hover:border-ink/40",
         variant === "ghost" && "text-ink/70 hover:bg-ink/5 hover:text-ink",
-        variant === "danger" && "text-ember hover:bg-ember/10",
+        variant === "danger" && "text-red-700 hover:bg-red-50",
         className,
       )}
     />

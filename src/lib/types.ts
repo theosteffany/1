@@ -3,7 +3,17 @@
 // grow indefinitely; one-off copy lives in a single JSON settings row so new
 // fields can be added without a database migration.
 
+export interface ThemeColors {
+  bone: string; // main background
+  mist: string; // Brands section background
+  ink: string; // text + dark sections
+  olive: string; // accent: labels, icons, button hover
+  sand: string; // Contact section background
+  ember: string; // highlight: badges, text selection
+}
+
 export interface SiteSettings {
+  theme: ThemeColors;
   seo: {
     title: string;
     description: string;

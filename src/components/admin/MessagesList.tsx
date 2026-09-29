@@ -37,7 +37,7 @@ export function MessagesList() {
     <section>
       <h2 className="display text-3xl">Messages</h2>
       <p className="mt-2 text-sm text-ink/65">Enquiries sent through the contact form.</p>
-      {error && <p className="mt-4 text-sm text-ember">{error}</p>}
+      {error && <p className="mt-4 text-sm text-red-700">{error}</p>}
       <div className="mt-6 space-y-3">
         {messages === null ? (
           <p className="text-sm text-ink/60">Loading…</p>

@@ -29,7 +29,7 @@ export default async function HomePage() {
       </main>
       <Footer name={settings.hero.name} tagline={settings.hero.tagline} />
       {source === "placeholder" && (
-        <p className="fixed bottom-3 left-3 z-30 rounded-full bg-ember px-3 py-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-bone shadow-lg">
+        <p className="fixed bottom-3 left-3 z-30 rounded-full bg-ember px-3 py-1.5 text-[0.62rem] font-semibold uppercase tracking-[0.2em] text-ink shadow-lg">
           Placeholder content
         </p>
       )}

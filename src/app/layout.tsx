@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { getSiteContent } from "@/lib/content";
+import { themeCss } from "@/lib/theme";
 import { archivo, instrumentSerif } from "./fonts";
 import "./globals.css";
 
@@ -30,14 +31,19 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#1C1B19",
+  themeColor: "#1E1B19",
   width: "device-width",
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const { settings } = await getSiteContent();
   return (
     <html lang="en-AU" className={`${archivo.variable} ${instrumentSerif.variable}`}>
+      <head>
+        {/* Palette from /admin → Colours (values are validated hex, so safe to inline) */}
+        <style dangerouslySetInnerHTML={{ __html: themeCss(settings.theme) }} />
+      </head>
       <body>{children}</body>
     </html>
   );

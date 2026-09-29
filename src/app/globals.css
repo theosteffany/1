@@ -3,17 +3,18 @@
 @tailwind utilities;
 
 /* ───────────────────────────────────────────────────────────
-   DESIGN TOKENS — change these to re-theme the whole site.
+   DESIGN TOKENS — fallbacks only. The live palette is set in
+   /admin → Colours and injected by src/app/layout.tsx.
    Values are space-separated RGB so Tailwind opacity works
    (e.g. bg-ink/60).
    ─────────────────────────────────────────────────────────── */
 :root {
-  --bone: 244 240 232;   /* warm off-white — main background */
-  --mist: 234 228 215;   /* slightly deeper off-white — alternate sections */
-  --ink: 28 27 25;       /* deep charcoal — text, dark sections */
-  --olive: 91 95 58;     /* earthy accent */
-  --sand: 217 203 176;   /* soft sand — cards, borders */
-  --ember: 217 113 60;   /* single highlight — use sparingly */
+  --bone: 243 239 234;  /* soft Malta tint — main background */
+  --mist: 230 223 215;  /* light Malta — Brands section */
+  --ink: 30 27 25;      /* Cod Gray — text, dark sections */
+  --olive: 109 79 62;   /* Tobacco Brown — accent labels, icons, hovers */
+  --sand: 192 179 165;  /* Malta — Contact section */
+  --ember: 130 155 171; /* Bali Hai — highlight, use sparingly */
 
   --font-sans: var(--font-display);
 
@@ -31,7 +32,7 @@
     text-rendering: optimizeLegibility;
   }
   ::selection {
-    @apply bg-ember text-bone;
+    @apply bg-ember text-ink;
   }
   :focus-visible {
     outline: 2px solid rgb(var(--ember));

@@ -114,7 +114,7 @@ export function MediaUpload({
         placeholder="…or paste a URL"
         className={`${inputClass} !mt-2 text-xs`}
       />
-      {note && <p className="text-xs text-ember">{note}</p>}
+      {note && <p className="text-xs text-red-700">{note}</p>}
     </div>
   );
 }

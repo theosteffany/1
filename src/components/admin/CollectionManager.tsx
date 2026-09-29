@@ -198,7 +198,7 @@ export function CollectionManager({ config }: { config: CollectionConfig }) {
       </div>
 
       {error && (
-        <p className="mb-4 rounded-md bg-ember/10 px-4 py-3 text-sm text-ember" role="alert">
+        <p className="mb-4 rounded-md bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
           {error}
         </p>
       )}

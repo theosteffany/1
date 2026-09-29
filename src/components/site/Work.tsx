@@ -67,7 +67,7 @@ function ProjectCard({ project, onOpen, index }: { project: Project; onOpen: () 
         <span className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/10 to-transparent" />
 
         {project.featured && (
-          <span className="eyebrow absolute left-3 top-3 rounded-full bg-ember px-3 py-1.5 text-[0.58rem] text-bone md:left-4 md:top-4">
+          <span className="eyebrow absolute left-3 top-3 rounded-full bg-ember px-3 py-1.5 text-[0.58rem] text-ink md:left-4 md:top-4">
             Featured
           </span>
         )}

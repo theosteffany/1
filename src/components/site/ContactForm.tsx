@@ -80,7 +80,7 @@ export function ContactForm({ fallbackEmail }: { fallbackEmail: string }) {
           <span className="block h-px w-6 bg-current transition-all duration-500 ease-cine group-hover:w-10" />
         </button>
         {status.state === "error" && (
-          <p className="text-sm text-ember" role="alert">
+          <p className="text-sm text-red-700" role="alert">
             {status.message}{" "}
             {fallbackEmail && (
               <>

@@ -5,6 +5,14 @@ import type { SiteContent, SiteSettings } from "./types";
 // placeholder — no real brands, clients, stats or testimonials.
 
 export const defaultSettings: SiteSettings = {
+  theme: {
+    bone: "#F3EFEA",
+    mist: "#E6DFD7",
+    ink: "#1E1B19",
+    olive: "#6D4F3E",
+    sand: "#C0B3A5",
+    ember: "#829BAB",
+  },
   seo: {
     title: "Theo — UGC Creator, Australia",
     description:
