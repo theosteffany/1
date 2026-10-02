@@ -5,10 +5,23 @@ import { useRef } from "react";
 import { Accent } from "@/components/ui/Accent";
 import { Media } from "@/components/ui/Media";
 import { Reveal } from "@/components/ui/Reveal";
-import { splitParagraphs } from "@/lib/utils";
+import { InstagramIcon, TikTokIcon } from "@/components/ui/Icons";
+import { socialUrl, splitParagraphs } from "@/lib/utils";
 import type { SiteSettings } from "@/lib/types";
 
-export function About({ about }: { about: SiteSettings["about"] }) {
+export function About({
+  about,
+  contact,
+}: {
+  about: SiteSettings["about"];
+  contact: Pick<SiteSettings["contact"], "instagram" | "tiktok">;
+}) {
+  // Same Instagram / TikTok as Admin → Contact & socials; an empty field hides its icon.
+  const socials = [
+    { label: "Instagram", href: socialUrl(contact.instagram, "instagram"), Icon: InstagramIcon },
+    { label: "TikTok", href: socialUrl(contact.tiktok, "tiktok"), Icon: TikTokIcon },
+  ].filter((s) => s.href);
+
   const ref = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
@@ -65,7 +78,7 @@ export function About({ about }: { about: SiteSettings["about"] }) {
               </p>
             </Reveal>
           ))}
-          <Reveal delay={0.2} className="mt-10">
+          <Reveal delay={0.2} className="mt-10 flex flex-wrap items-center gap-3">
             <a
               href="#contact"
               className="eyebrow group inline-flex items-center gap-4 rounded-full bg-ink px-7 py-4 text-bone transition-colors duration-500 hover:bg-olive"
@@ -73,6 +86,19 @@ export function About({ about }: { about: SiteSettings["about"] }) {
               Work with me
               <span className="block h-px w-6 bg-current transition-all duration-500 ease-cine group-hover:w-10" />
             </a>
+            {socials.map(({ label, href, Icon }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`${label} (opens in a new tab)`}
+                title={label}
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-ink/25 text-ink transition-colors duration-300 hover:border-olive hover:bg-olive hover:text-bone"
+              >
+                <Icon className="h-5 w-5" />
+              </a>
+            ))}
           </Reveal>
         </div>
       </div>

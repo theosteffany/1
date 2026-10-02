@@ -21,7 +21,7 @@ export default async function HomePage() {
   // Middle sections follow the order and on/off switches in /admin → Page layout.
   // Empty collections hide themselves (and their menu link) automatically.
   const sections: Record<SectionId, { node: React.ReactNode; hasContent: boolean; label: string }> = {
-    about: { label: "About", hasContent: true, node: <About about={settings.about} /> },
+    about: { label: "About", hasContent: true, node: <About about={settings.about} contact={settings.contact} /> },
     brands: { label: "Brands", hasContent: brands.length > 0, node: <Brands brands={brands} copy={settings.brands} /> },
     gallery: {
       label: "Gallery",
