@@ -12,8 +12,19 @@ export interface ThemeColors {
   ember: string; // highlight: badges, text selection
 }
 
+export type SectionId = "about" | "brands" | "gallery" | "work";
+
+export interface SectionSetting {
+  id: SectionId;
+  visible: boolean;
+}
+
 export interface SiteSettings {
   theme: ThemeColors;
+  layout: {
+    /** Middle sections, top to bottom. Hero is always first, Contact always last. */
+    sections: SectionSetting[];
+  };
   seo: {
     title: string;
     description: string;

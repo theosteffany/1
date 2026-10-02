@@ -3,15 +3,9 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
-const links = [
-  { href: "#about", label: "About" },
-  { href: "#brands", label: "Brands" },
-  { href: "#gallery", label: "Gallery" },
-  { href: "#work", label: "Work" },
-  { href: "#contact", label: "Contact" },
-];
+type NavLink = { href: string; label: string };
 
-export function SiteNav({ name }: { name: string }) {
+export function SiteNav({ name, links }: { name: string; links: NavLink[] }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {

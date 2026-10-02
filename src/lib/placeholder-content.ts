@@ -20,6 +20,14 @@ export const defaultSettings: SiteSettings = {
     faviconUrl: "",
     ogImageUrl: "",
   },
+  layout: {
+    sections: [
+      { id: "about", visible: true },
+      { id: "brands", visible: true },
+      { id: "gallery", visible: true },
+      { id: "work", visible: true },
+    ],
+  },
   hero: {
     name: "THEO",
     tagline: "UGC CREATOR — AUS",

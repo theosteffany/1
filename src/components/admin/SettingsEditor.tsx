@@ -15,6 +15,13 @@ const accentHelp = "Wrap words in *asterisks* to show them in the italic serif a
 
 export const settingsGroups: Group[] = [
   {
+    key: "layout",
+    title: "Page layout",
+    description:
+      "Choose the order of the sections on your site and switch any of them off. Brands, Gallery and My Work also hide themselves automatically while they're empty.",
+    fields: [{ key: "sections", label: "Sections, top to bottom", type: "sections", wide: true }],
+  },
+  {
     key: "theme",
     title: "Colours",
     description:
