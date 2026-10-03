@@ -30,8 +30,9 @@ cp .env.example .env.local     # set VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
 npm run dev                    # http://localhost:5173
 ```
 
-Apply the database with the Supabase CLI (`supabase link` then `supabase db push`), or paste the files in
-`supabase/migrations/` into the SQL editor **in filename order**.
+Apply the database with the Supabase CLI (`supabase link` then `supabase db push`), **or** paste
+[`supabase/setup.sql`](supabase/setup.sql), which bundles every migration, into the SQL Editor and click Run (on a new
+project, once). After changing a migration, regenerate the bundle with `npm run db:bundle`.
 
 Without credentials the app shows a setup screen. In development, fixture-driven design previews are at
 `/dev/athlete`, `/dev/athlete-empty` and `/dev/pro` (excluded from production builds).
@@ -43,6 +44,7 @@ Without credentials the app shows a setup screen. In development, fixture-driven
 | `npm run lint` | oxlint |
 | `npm test` | Vitest unit tests (domain logic, AI guardrails, permission mirror) |
 | `npm run db:test` | Spins up a throwaway Postgres, applies every migration, runs the RLS test suite |
+| `npm run db:bundle` | Regenerates `supabase/setup.sql` (all migrations in one file) |
 | `npm run db:types` | Same, then regenerates `src/types/database.types.ts` from the live schema |
 
 `db:test` needs PostgreSQL 15+ server binaries (`initdb`, `pg_ctl`) — no Docker required.
