@@ -1,0 +1,193 @@
+#!/usr/bin/env node
+// Generates src/types/database.types.ts (Supabase type format) by introspecting
+// a Postgres database that has the migrations applied.
+//
+// Normally you would run `supabase gen types typescript`; this script exists so
+// types can be regenerated from the local test cluster without Docker:
+//
+//   GEN_TYPES=1 npm run db:test
+//
+// Connection is taken from the standard PG* environment variables.
+import { writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
+import pg from 'pg'
+
+const OUT = resolve(dirname(fileURLToPath(import.meta.url)), '../src/types/database.types.ts')
+const client = new pg.Client()
+await client.connect()
+
+const q = async (sql, params) => (await client.query(sql, params)).rows
+
+const enums = await q(`
+  select t.typname as name, array_agg(e.enumlabel::text order by e.enumsortorder) as labels
+  from pg_type t join pg_enum e on e.enumtypid = t.oid
+  join pg_namespace n on n.oid = t.typnamespace
+  where n.nspname = 'public' group by t.typname order by t.typname`)
+const enumNames = new Set(enums.map((e) => e.name))
+
+const columns = await q(`
+  select c.table_name, c.column_name, c.is_nullable = 'YES' as nullable,
+         c.column_default is not null or c.is_identity = 'YES' as has_default,
+         c.is_identity = 'YES' and c.identity_generation = 'ALWAYS' as always_identity,
+         c.data_type, c.udt_name
+  from information_schema.columns c
+  join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = c.table_name
+  where c.table_schema = 'public' and t.table_type = 'BASE TABLE'
+  order by c.table_name, c.ordinal_position`)
+
+const fks = await q(`
+  select con.conname, src.relname as table_name,
+         array(select a.attname from unnest(con.conkey) with ordinality k(n, i)
+               join pg_attribute a on a.attrelid = con.conrelid and a.attnum = k.n order by k.i)::text[] as cols,
+         dst.relname as ref_table,
+         array(select a.attname from unnest(con.confkey) with ordinality k(n, i)
+               join pg_attribute a on a.attrelid = con.confrelid and a.attnum = k.n order by k.i)::text[] as ref_cols,
+         exists (select 1 from pg_index ix where ix.indrelid = con.conrelid and ix.indisunique
+                 and ix.indkey::int2[] @> con.conkey and cardinality(ix.indkey::int2[]) = cardinality(con.conkey)) as one_to_one
+  from pg_constraint con
+  join pg_class src on src.oid = con.conrelid
+  join pg_class dst on dst.oid = con.confrelid
+  join pg_namespace n on n.oid = src.relnamespace
+  join pg_namespace dn on dn.oid = dst.relnamespace
+  where con.contype = 'f' and n.nspname = 'public' and dn.nspname = 'public'
+  order by src.relname, con.conname`)
+
+const functions = await q(`
+  select p.proname::text as name, p.proretset as returns_set, p.pronargdefaults as n_defaults,
+         coalesce(p.proargnames, '{}')::text[] as arg_names,
+         coalesce(p.proargmodes::text[], '{}') as arg_modes,
+         array(select format_type(x, null) from unnest(coalesce(p.proallargtypes, p.proargtypes::oid[])) x) as arg_types,
+         p.pronargs as n_in,
+         format_type(p.prorettype, null) as return_type,
+         rt.typtype as return_typtype, rt.typname as return_typname,
+         rel.relname as return_relname
+  from pg_proc p
+  join pg_namespace n on n.oid = p.pronamespace
+  join pg_type rt on rt.oid = p.prorettype
+  left join pg_class rel on rel.oid = rt.typrelid and rel.relkind = 'r'
+  where n.nspname = 'public'
+    and rt.typname <> 'trigger'
+    and has_function_privilege('authenticated', p.oid, 'execute')
+  order by p.proname`)
+
+await client.end()
+
+const scalar = (udt) => {
+  const base = udt.replace(/^_/, '')
+  if (enumNames.has(base)) return `Database["public"]["Enums"]["${base}"]`
+  switch (base) {
+    case 'int2': case 'int4': case 'int8': case 'float4': case 'float8': case 'numeric':
+    case 'smallint': case 'integer': case 'bigint': case 'real': case 'double precision':
+      return 'number'
+    case 'bool': case 'boolean': return 'boolean'
+    case 'json': case 'jsonb': return 'Json'
+    case 'void': return 'undefined'
+    default: return 'string'
+  }
+}
+const tsType = (udt) => (udt.startsWith('_') ? `${scalar(udt)}[]` : scalar(udt))
+const fmtType = (t) => {
+  const isArray = t.endsWith('[]')
+  const base = t.replace(/\[\]$/, '').replace(/^public\./, '')
+  const map = { 'smallint': 'int2', 'integer': 'int4', 'bigint': 'int8', 'numeric': 'numeric', 'boolean': 'bool',
+    'jsonb': 'jsonb', 'json': 'json', 'void': 'void', 'real': 'float4', 'double precision': 'float8' }
+  const s = scalar(map[base] ?? base)
+  return isArray ? `${s}[]` : s
+}
+
+const tables = new Map()
+for (const c of columns) {
+  if (!tables.has(c.table_name)) tables.set(c.table_name, [])
+  tables.get(c.table_name).push(c)
+}
+
+const ind = (n) => '  '.repeat(n)
+let out = `// AUTO-GENERATED by scripts/gen-types.mjs — do not edit by hand.
+// Regenerate with \`GEN_TYPES=1 npm run db:test\` (or \`supabase gen types typescript\`).
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
+export type Database = {
+  __InternalSupabase: { PostgrestVersion: "12" }
+  public: {
+    Tables: {
+`
+for (const [name, cols] of tables) {
+  const row = cols.map((c) => `${ind(5)}${c.column_name}: ${tsType(c.udt_name)}${c.nullable ? ' | null' : ''}`)
+  const ins = cols.filter((c) => !c.always_identity).map((c) =>
+    `${ind(5)}${c.column_name}${c.nullable || c.has_default ? '?' : ''}: ${tsType(c.udt_name)}${c.nullable ? ' | null' : ''}`)
+  const upd = cols.filter((c) => !c.always_identity).map((c) =>
+    `${ind(5)}${c.column_name}?: ${tsType(c.udt_name)}${c.nullable ? ' | null' : ''}`)
+  const rels = fks.filter((f) => f.table_name === name).map((f) => `${ind(5)}{
+${ind(6)}foreignKeyName: "${f.conname}"
+${ind(6)}columns: [${f.cols.map((x) => `"${x}"`).join(', ')}]
+${ind(6)}isOneToOne: ${f.one_to_one}
+${ind(6)}referencedRelation: "${f.ref_table}"
+${ind(6)}referencedColumns: [${f.ref_cols.map((x) => `"${x}"`).join(', ')}]
+${ind(5)}},`)
+  out += `${ind(3)}${name}: {
+${ind(4)}Row: {
+${row.join('\n')}
+${ind(4)}}
+${ind(4)}Insert: {
+${ins.join('\n')}
+${ind(4)}}
+${ind(4)}Update: {
+${upd.join('\n')}
+${ind(4)}}
+${ind(4)}Relationships: [
+${rels.join('\n')}
+${ind(4)}]
+${ind(3)}}
+`
+}
+out += `${ind(2)}}
+${ind(2)}Views: { [_ in never]: never }
+${ind(2)}Functions: {
+`
+for (const f of functions) {
+  const inArgs = []
+  const outCols = []
+  f.arg_types.forEach((t, i) => {
+    const mode = f.arg_modes[i] ?? 'i'
+    const argName = f.arg_names[i] || `arg${i}`
+    if (mode === 'i' || mode === 'b') inArgs.push({ name: argName, type: t })
+    if (mode === 'o' || mode === 't' || mode === 'b') outCols.push({ name: argName, type: t })
+  })
+  const firstDefault = f.n_in - f.n_defaults
+  const args = inArgs.length
+    ? `{ ${inArgs.map((a, i) => `${a.name}${i >= firstDefault ? '?' : ''}: ${fmtType(a.type)}`).join('; ')} }`
+    : 'never'
+  let ret
+  if (outCols.length) ret = `{ ${outCols.map((c) => `${c.name}: ${fmtType(c.type)} | null`).join('; ')} }`
+  else if (f.return_relname) ret = `Database["public"]["Tables"]["${f.return_relname}"]["Row"]`
+  else ret = fmtType(f.return_type)
+  if (f.returns_set) ret = `${ret}[]`
+  out += `${ind(3)}${f.name}: { Args: ${args}; Returns: ${ret} }\n`
+}
+out += `${ind(2)}}
+${ind(2)}Enums: {
+${enums.map((e) => `${ind(3)}${e.name}: ${e.labels.map((l) => `"${l}"`).join(' | ')}`).join('\n')}
+${ind(2)}}
+${ind(2)}CompositeTypes: { [_ in never]: never }
+${ind(1)}}
+}
+
+type PublicSchema = Database["public"]
+export type Tables<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Row"]
+export type TablesInsert<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Insert"]
+export type TablesUpdate<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Update"]
+export type Enums<T extends keyof PublicSchema["Enums"]> = PublicSchema["Enums"][T]
+export type Functions<T extends keyof PublicSchema["Functions"]> = PublicSchema["Functions"][T]
+
+export const Constants = {
+  public: {
+    Enums: {
+${enums.map((e) => `${ind(3)}${e.name}: [${e.labels.map((l) => `"${l}"`).join(', ')}],`).join('\n')}
+    },
+  },
+} as const
+`
+writeFileSync(OUT, out)
+console.log(`wrote ${OUT} (${tables.size} tables, ${functions.length} functions, ${enums.length} enums)`)
