@@ -58,20 +58,25 @@ export function MediaUpload({
 
   async function handle(file: File) {
     setNote("");
-    const limit = kind === "image" ? 8 * MB : 80 * MB;
-    if (file.size > limit) {
-      setNote(
-        kind === "image"
-          ? "Large image — consider exporting under 8MB (the site resizes automatically, but uploads are faster)."
-          : "Large video — for fast loading, compress to H.264 MP4 under ~20MB for the hero, ~50MB for projects.",
-      );
+    const sizeMb = (file.size / MB).toFixed(0);
+    if (kind === "image" && file.size > 8 * MB) {
+      setNote("Large image — consider exporting under 8MB (the site resizes automatically, but uploads are faster).");
     }
     setBusy(true);
     try {
       onFile?.(file);
       onChange(await uploadToStorage(file, folder));
     } catch (e) {
-      setNote(`Upload failed: ${(e as Error).message}`);
+      const message = (e as Error).message || "";
+      // Supabase rejects files over the project's upload limit (50MB on the free plan).
+      const tooBig = /maximum allowed size|too large|payload|413/i.test(message);
+      setNote(
+        tooBig
+          ? `This file is ${sizeMb}MB, which is over your Supabase upload limit (50MB on the free plan). ` +
+              `Compress it to an MP4 under 50MB (e.g. HandBrake → "Fast 1080p30"), or raise the limit in ` +
+              `Supabase → Storage → Settings on a paid plan.`
+          : `Upload failed: ${message}`,
+      );
     } finally {
       setBusy(false);
     }
@@ -114,6 +119,9 @@ export function MediaUpload({
         placeholder="…or paste a URL"
         className={`${inputClass} !mt-2 text-xs`}
       />
+      {kind === "video" && !note && (
+        <p className="text-xs text-ink/55">MP4 recommended · max 50MB per file on Supabase&apos;s free plan</p>
+      )}
       {note && <p className="text-xs text-red-700">{note}</p>}
     </div>
   );
