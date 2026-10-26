@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9BFA3"/><stop offset="0.55" stop-color="#B39B74"/><stop offset="0.56" stop-color="#6E6440"/><stop offset="1" stop-color="#2E2C1E"/></linearGradient>
+<radialGradient id="sun" cx="0.5" cy="0.52" r="0.35"><stop offset="0" stop-color="#F4E3C0" stop-opacity="0.9"/><stop offset="1" stop-color="#F4E3C0" stop-opacity="0"/></radialGradient>
+<filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.14 0"/></filter>
+</defs>
+<rect width="100%" height="100%" fill="url(#sky)"/>
+<rect width="100%" height="100%" fill="url(#sun)"/>
+<path d="M0 610 L260 560 L520 590 L760 540 L1010 585 L1300 548 L1580 590 L1920 555 L1920 620 L0 620 Z" fill="#5D5838" opacity="0.55"/>
+<rect width="100%" height="100%" filter="url(#n)"/>
+<text x="960" y="840" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="16" letter-spacing="5" fill="#F4F0E8" opacity="0.55">HERO VIDEO PLACEHOLDER</text>
+</svg>
