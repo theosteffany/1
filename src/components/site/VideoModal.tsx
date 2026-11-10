@@ -1,11 +1,63 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, ArrowUpRight, CloseIcon } from "@/components/ui/Icons";
 import { Media } from "@/components/ui/Media";
 import { useModalBehaviour } from "@/components/ui/useModalBehaviour";
 import { cn } from "@/lib/utils";
 import type { Project } from "@/lib/types";
+
+// Plays straight away WITH sound. Opening the modal is a tap/click, so browsers
+// allow audible playback. If a browser still blocks it, fall back to muted
+// playback and show a "Tap for sound" button.
+function ModalVideo({ src, poster }: { src: string; poster?: string }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [needsSound, setNeedsSound] = useState(false);
+
+  useEffect(() => {
+    const video = ref.current;
+    if (!video) return;
+    video.muted = false;
+    video.play().catch(() => {
+      video.muted = true;
+      setNeedsSound(true);
+      video.play().catch(() => {});
+    });
+  }, []);
+
+  const enableSound = () => {
+    const video = ref.current;
+    if (!video) return;
+    video.muted = false;
+    video.play().catch(() => {});
+    setNeedsSound(false);
+  };
+
+  return (
+    <>
+      <video
+        ref={ref}
+        src={src}
+        poster={poster}
+        className="h-full w-full object-contain"
+        controls
+        playsInline
+        preload="auto"
+        onVolumeChange={(e) => !e.currentTarget.muted && setNeedsSound(false)}
+      />
+      {needsSound && (
+        <button
+          type="button"
+          onClick={enableSound}
+          className="eyebrow absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-bone px-5 py-2.5 text-ink shadow-lg transition hover:bg-sand"
+        >
+          Tap for sound
+        </button>
+      )}
+    </>
+  );
+}
 
 export function VideoModal({
   projects,
@@ -67,17 +119,7 @@ export function VideoModal({
               )}
             >
               {p.video_url ? (
-                <video
-                  key={p.video_url}
-                  src={p.video_url}
-                  poster={p.thumbnail_url ?? undefined}
-                  className="h-full w-full object-contain"
-                  controls
-                  autoPlay
-                  muted
-                  playsInline
-                  preload="metadata"
-                />
+                <ModalVideo key={p.video_url} src={p.video_url} poster={p.thumbnail_url ?? undefined} />
               ) : (
                 <>
                   {p.thumbnail_url && <Media src={p.thumbnail_url} alt="" fill sizes="50vw" className="object-cover opacity-60" />}
